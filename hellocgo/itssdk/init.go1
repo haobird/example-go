@@ -1,0 +1,31 @@
+package itssdk
+
+/*
+#include "imos_sdk_def.h"
+#include "imos_sdk_pub.h"
+#include "imos_sdk_func.h"
+#include <stdlib.h>
+#include <string.h>
+
+VOID STDCALL* CGO_IMOS_MW_STATUS_REPORT_CALLBACK(IN CHAR *pcUserID, IN ULONG ulReportType,IN VOID *pParam);
+VOID STDCALL* CGO_IMOS_MW_TMS_MULTIUSER_PIC_UPLOAD(IN IMOS_MW_MULTI_UNIVIEW_PROTOCOL_HEADER_S *pstUniviewData, IN ULONG ulStreamHandle);
+
+//arm linux
+#cgo CFLAGS: -DPNG_DEBUG=1 -I /opt/sdk_uniview/include
+#cgo LDFLAGS: -L/opt/sdk_uniview/dll -limos_mw_sdk -lmw_sdk_bp -lmw_sdk_ipc -lmw_sdk_player -lmw_sdk_rm
+*/
+import "C"
+import "fmt"
+
+//Init 初始化函数
+func Test() {
+
+	// 调用sdk的 初始化函数
+	/*SDK初始化:只需初始化一次*/
+	ulRet := C.IMOS_MW_Initiate()
+	if C.ERR_COMMON_SUCCEED != ulRet {
+		fmt.Sprintf("IMOS_MW_SetLog failed, return value: %lu.\n", ulRet)
+		return
+	}
+
+}

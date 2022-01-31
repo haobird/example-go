@@ -1,0 +1,10 @@
+zk:
+  hosts: "ssss"
+  root: "services"
+  group:
+    tobprefix: "thrift."
+    iotprefix: "service."
+    name: ""
+  service: 
+    level: 10
+  timeout: 30
