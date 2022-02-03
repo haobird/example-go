@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	HOST = "localhost"
+	HOST = "192.168.1.8"
 	PORT = "8085"
 )
 
@@ -23,7 +24,7 @@ func main() {
 	// 创建 数据 传输方式 工厂
 	transportFactory := thrift.NewTFramedTransportFactory(thrift.NewTTransportFactory())
 	//
-	transport := transportFactory.GetTransport(tSocket)
+	transport, _ := transportFactory.GetTransport(tSocket)
 	// 创建 传输协议 工厂
 	protocolFactory := thrift.NewTBinaryProtocolFactoryDefault()
 
@@ -34,7 +35,8 @@ func main() {
 	}
 	defer transport.Close()
 
+	ctx := context.Background()
 	data := message.Data{Text: "hello, world!"}
-	d, err := client.DoFormat(&data)
+	d, err := client.DoFormat(ctx, &data)
 	fmt.Println(d.Text)
 }
