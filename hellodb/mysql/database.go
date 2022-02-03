@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/go-kit/kit/tracing/opentracing"
 	"github.com/jmoiron/sqlx"
 	"github.com/opentracing/opentracing-go"
 )

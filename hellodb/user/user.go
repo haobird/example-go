@@ -27,17 +27,17 @@ type UserPage struct {
 type UserRepository interface {
 	Save(ctx context.Context, u User) (string, error)
 
-	SaveMany(ctx context.Context, us ...User) ([]User, error)
+	// SaveMany(ctx context.Context, us ...User) ([]User, error)
 
-	Update(ctx context.Context, u User) error
+	// Update(ctx context.Context, u User) error
 
-	RetrieveByEmail(ctx context.Context, email string) (User, error)
+	// RetrieveByEmail(ctx context.Context, email string) (User, error)
 
-	RetrieveByID(ctx context.Context, id string) (User, error)
+	// RetrieveByID(ctx context.Context, id string) (User, error)
 
-	RetrieveAllByIDs(ctx context.Context, ids []string) ([]User, error)
+	// RetrieveAllByIDs(ctx context.Context, ids []string) ([]User, error)
 
-	RetrievePage(ctx context.Context, pm PageMetadata, params map[string]interface{}) (UserPage, error)
+	// RetrievePage(ctx context.Context, pm PageMetadata, params map[string]interface{}) (UserPage, error)
 
 	Remove(ctx context.Context, id string) error
 }
