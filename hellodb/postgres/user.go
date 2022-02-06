@@ -1,4 +1,4 @@
-package mysql
+package postgres
 
 import (
 	"context"
@@ -7,10 +7,8 @@ import (
 	"hellodb/user"
 	"strings"
 
-	"github.com/VividCortex/mysqlerr"
-	"github.com/go-sql-driver/mysql"
 	"github.com/imdario/mergo"
-
+	"github.com/lib/pq"
 	"github.com/mainflux/mainflux/pkg/errors"
 )
 
@@ -44,7 +42,7 @@ func NewUserRepository(db Database) user.UserRepository {
 }
 
 func (ur userRepository) Save(ctx context.Context, u user.User) (string, error) {
-	q := `INSERT INTO users (email, password, id, metadata) VALUES (:email, :password, :id, :metadata)`
+	q := `INSERT INTO users (email, password, id, metadata) VALUES (:email, :password, :id, :metadata) RETURNING id`
 	if u.ID == "" || u.Email == "" {
 		return "", user.ErrMalformedEntity
 	}
@@ -54,28 +52,26 @@ func (ur userRepository) Save(ctx context.Context, u user.User) (string, error) 
 		return "", errors.Wrap(errSaveUserDB, err)
 	}
 
-	ret, err := ur.db.NamedExecContext(ctx, q, dbu)
+	row, err := ur.db.NamedQueryContext(ctx, q, dbu)
 	if err != nil {
-		// make sure err is a mysql.MySQLError.
-		errMySQL, ok := err.(*mysql.MySQLError)
+		pqErr, ok := err.(*pq.Error)
 		if ok {
-			switch errMySQL.Number {
-			case mysqlerr.ER_DUP_ENTRY: // Error 1062: Duplicate entry '%s' for key %d
+			switch pqErr.Code.Name() {
+			case errInvalid, errTruncation:
+				return "", errors.Wrap(user.ErrMalformedEntity, err)
+			case errDuplicate:
 				return "", errors.Wrap(user.ErrConflict, err)
 			}
 		}
 		return "", errors.Wrap(errSaveUserDB, err)
 	}
 
-	theID, err := ret.LastInsertId() // 新插入数据的id
-	if err != nil {
-		fmt.Printf("get lastinsert ID failed, err:%v\n", err)
+	defer row.Close()
+	row.Next()
+	var id string
+	if err := row.Scan(&id); err != nil {
 		return "", err
 	}
-	// 记录入库id
-	fmt.Printf("insert success, the id is %d.\n", theID)
-
-	id := dbu.ID
 	return id, nil
 }
 
@@ -247,7 +243,8 @@ func createConditionQuery(entity string, params map[string]interface{}) (string,
 			args["email"] = param
 		case "startTime":
 			param := val.(string)
-			qs := "DATE_FORMAT(create_time,'%Y-%m-%d') > :startTime"
+			// qs := "DATE_FORMAT(create_time,'%Y-%m-%d') > :startTime"
+			qs := "to_date(cast(create_time as TEXT),'YYYY-MM-DD') > :startTime"
 			query = append(query, qs)
 			args["startTime"] = param
 		case "ids":

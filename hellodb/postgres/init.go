@@ -1,12 +1,13 @@
-package mysql
+package postgres
 
 import (
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq" // required for SQL access
 	migrate "github.com/rubenv/sql-migrate"
 )
 
 func Connect(dsn string) (*sqlx.DB, error) {
-	db, err := sqlx.Open("mysql", dsn)
+	db, err := sqlx.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -42,29 +43,39 @@ func migrateDB(db *sqlx.DB) error {
 			{
 				Id: "users_1",
 				Up: []string{
-					`CREATE TABLE IF  NOT EXISTS users(
-					   _id bigint NOT NULL AUTO_INCREMENT,
-					   id CHAR(60)  NOT NULL,
-					   email VARCHAR(254) NOT NULL,
-					   metadata json,
-					   password CHAR(60) NOT NULL,
-					   create_time timestamp default current_timestamp,
-					   PRIMARY KEY ( _id )
+					`CREATE TABLE IF NOT EXISTS users (
+					 email    VARCHAR(254) PRIMARY KEY,
+					 password CHAR(60)     NOT  NULL,
+					 create_time timestamp default current_timestamp
 					)`,
 				},
 				Down: []string{"DROP TABLE users"},
 			},
 			{
+				Id: "users_2",
+				Up: []string{
+					`ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS metadata JSONB`,
+				},
+			},
+			{
+				Id: "users_3",
+				Up: []string{
+					`CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+					 ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS
+					 id UUID NOT NULL DEFAULT gen_random_uuid()`,
+				},
+			},
+			{
 				Id: "users_4",
 				Up: []string{
-					`ALTER TABLE users ADD UNIQUE (id)`,
-					`ALTER TABLE users ADD UNIQUE (email)`,
-					// `ALTER TABLE IF EXISTS users ADD PRIMARY KEY (id)`,
+					`ALTER TABLE IF EXISTS users DROP CONSTRAINT users_pkey`,
+					`ALTER TABLE IF EXISTS users ADD CONSTRAINT users_email_key UNIQUE (email)`,
+					`ALTER TABLE IF EXISTS users ADD PRIMARY KEY (id)`,
 				},
 			},
 		},
 	}
 
-	_, err := migrate.Exec(db.DB, "mysql", migrations, migrate.Up)
+	_, err := migrate.Exec(db.DB, "postgres", migrations, migrate.Up)
 	return err
 }
