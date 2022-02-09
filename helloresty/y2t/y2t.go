@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-resty/resty/v2"
+	"github.com/langbox/logger"
 )
 
 const (
@@ -37,9 +38,6 @@ func PoSearch(po string) (Order, error) {
 	}`
 	body := fmt.Sprintf(jsonStr, po)
 
-	spew.Dump(url)
-	fmt.Println(body)
-
 	client := resty.New()
 	request := client.R()
 	request = request.EnableTrace()
@@ -47,15 +45,17 @@ func PoSearch(po string) (Order, error) {
 	request = request.SetBody(body)
 	request = request.SetHeaders(headers)
 	resp, err := request.Post(url)
-	fmt.Println("err:", err)
-	spew.Dump(resp)
+	// fmt.Println("err:", err)
+	// spew.Dump(resp)
+
+	logger.Infof("[%s] 获取PO信息 err: %v, 结果: %s", Mod_PoSearch, err, resp)
 
 	var info Order
 	if err != nil {
 		return info, err
 	}
 
-	var result PoSearchResult
+	var result Result
 	err = json.Unmarshal(resp.Body(), &result)
 	if err != nil {
 		return info, err
@@ -64,24 +64,116 @@ func PoSearch(po string) (Order, error) {
 	if result.Status != "1" {
 		return info, errors.New(result.ErrorMsg)
 	}
-	info = result.Data[0]
+
+	var infos []Order
+	buf, _ := json.Marshal(result.Data)
+	err = json.Unmarshal(buf, &infos)
+	if err != nil {
+		return info, err
+	}
+	info = infos[0]
 	return info, nil
 }
 
-// 获取 最新 预约时间
-func getLatestRevByPo(data Order) {
-	// queryURL := "/reservation/pages/tourists-reservation.html"
+// 获取 最新 预约时间 （一般是传入当前时间查询近15天的的预约时间）
+func GetLatestRevByPo(data Order, date string, flag bool) ([]Reservation, error) {
+	var infos []Reservation
 
 	// 组合 referer url
+	referer := CreateReservationReferer(data)
 
 	// 组合 请求 参数
+	headers["Content-Type"] = ContentType
+	headers["Origin"] = origin_url
+	headers["Referer"] = referer
+
+	if date == "" {
+		date = time.Now().Format("2006-01-02")
+	}
 
 	// 获取 可以 预约的 日期
+	url := BaseURI + potimeres_url
+	jsonStr := `{
+        "parameter": {
+            "startDate": "%s",
+            "controlWord": "I",
+            "officeCode": "%s",
+            "customerCode": "%s"
+        }
+    }`
+	body := fmt.Sprintf(jsonStr, date, data.OfficeCode, data.AgentConsigneeCode)
+
+	client := resty.New()
+	request := client.R()
+	request = request.EnableTrace()
+	request = request.SetHeaders(headers)
+	request = request.SetBody(body)
+	resp, err := request.Post(url)
+
+	// logger.Infof("[%s] 获取可预约日期 err: %v, 结果: %s", Mod_GetLatestRevByPo, err, resp)
+
+	var result Result
+	err = json.Unmarshal(resp.Body(), &result)
+	if err != nil {
+		logger.Errorf("[%s] 解析 响应数据错误 err:%v", Mod_GetLatestRevByPo, err)
+		return infos, err
+	}
+
+	if result.Status != "0" {
+		logger.Errorf("[%s] 获得响应结果错误提示 :%v", Mod_GetLatestRevByPo, result.ErrorMsg)
+		return infos, err
+	}
+
+	buf, _ := json.Marshal(result.Data)
+	err = json.Unmarshal(buf, &infos)
+	if err != nil {
+		logger.Errorf("[%s] 获得响应结果 解析数据错误 :%v", Mod_GetLatestRevByPo, result.ErrorMsg)
+		return infos, err
+	}
+
+	// 判断 是否有 可预约的日期
+	if len(infos) < 1 {
+		logger.Errorf("[%s] 获得响应结果 没有可预约的时间段", Mod_GetLatestRevByPo)
+		return infos, err
+	}
+
+	// 是否继续获取剩余数量
+	if !flag {
+		return infos, err
+	}
 
 	// 获取 剩余的 仓库 数量
+	url = BaseURI + potimeresnum_url
+	payload := map[string]interface{}{
+		"reservationNumList": result.Data,
+	}
+	buf, err = json.Marshal(payload)
+	if err != nil {
+		logger.Errorf("[%s] 生成 获取剩余可预约数量的 方法错误: %v", Mod_GetLatestRevByPo, err)
+		return infos, err
+	}
+
+	request = request.SetBody(string(buf))
+	resp, err = request.Post(url)
+
+	// logger.Infof("[%s] 获取可预约数量 err: %v, 结果: %s", Mod_GetLatestRevByPo, err, resp)
+	return infos, err
 }
 
 // 提交 预约 订单
+func SaveReservation() {
+
+}
+
+// 生成
+func CreateReservationReferer(data Order) string {
+	url := BaseURI + tourists_reservation_url
+	buf, _ := json.Marshal(data)
+	var values map[string]string
+	json.Unmarshal(buf, &values)
+
+	return combineURL(url, values)
+}
 
 // 合并 参数 和 URL
 func combineURL(url string, values map[string]string) string {
@@ -103,12 +195,29 @@ func combineURL(url string, values map[string]string) string {
 	return str
 }
 
-// 生成
-func CreateReservationReferer(data Order) string {
-	url := BaseURI + tourists_reservation_url
-	buf, _ := json.Marshal(data)
-	var values map[string]string
-	json.Unmarshal(buf, &values)
+// 发起请求 和响应
+func Request(url string, body interface{}, headers map[string]string) (interface{}, error) {
+	client := resty.New()
+	request := client.R()
+	request = request.EnableTrace()
+	request = request.SetHeaders(headers)
+	request = request.SetBody(body)
+	resp, err := request.Post(url)
 
-	return combineURL(url, values)
+	logger.Infof("[Request] 获取请求 err: %v, 结果: %s", err, resp)
+
+	var result Result
+	err = json.Unmarshal(resp.Body(), &result)
+	if err != nil {
+		logger.Errorf("[%s] 解析 响应数据错误 err:%v", Mod_GetLatestRevByPo, err)
+		return "", err
+	}
+
+	if result.Status != "0" && result.Status != "1" {
+		logger.Errorf("[%s] 获得响应结果错误提示 :%v", Mod_GetLatestRevByPo, result.ErrorMsg)
+		return "", err
+	}
+
+	return result.Data, nil
+
 }
