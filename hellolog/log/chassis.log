@@ -1,0 +1,30 @@
+{"level":"debug","msg":"hello log","time":"2022-03-06 17:48:05"}
+{"level":"error","msg":"ddd11","time":"2022-03-06 17:48:05"}
+{"level":"fatal","msg":"tt kk","time":"2022-03-06 17:48:05"}
+{"level":"debug","msg":"hello log","time":"2022-03-07 09:59:41"}
+{"level":"error","msg":"ddd11","time":"2022-03-07 09:59:41"}
+{"level":"fatal","msg":"tt kk","time":"2022-03-07 09:59:41"}
+{"level":"debug","msg":"hello log","time":"2022-03-07 10:01:10"}
+{"level":"error","msg":"ddd11","time":"2022-03-07 10:01:10"}
+{"level":"fatal","msg":"tt kk","time":"2022-03-07 10:01:10"}
+{"level":"debug","msg":"hello log","time":"2022-03-07 10:02:13"}
+{"level":"error","msg":"ddd11","time":"2022-03-07 10:02:13"}
+{"level":"fatal","msg":"tt kk","time":"2022-03-07 10:02:13"}
+{"level":"debug","msg":"hello log","time":"2022-03-07 10:02:41"}
+{"level":"error","msg":"ddd11","time":"2022-03-07 10:02:41"}
+{"level":"fatal","msg":"tt kk","time":"2022-03-07 10:02:41"}
+{"level":"debug","msg":"ddd","time":"2022-03-07 10:03:03"}
+{"level":"debug","msg":"hello log","time":"2022-03-07 10:03:03"}
+{"level":"error","msg":"ddd11","time":"2022-03-07 10:03:03"}
+{"level":"fatal","msg":"tt kk","time":"2022-03-07 10:03:03"}
+{"level":"debug","msg":"hello log","time":"2022-03-07 10:03:34"}
+{"level":"error","msg":"ddd11","time":"2022-03-07 10:03:34"}
+{"level":"fatal","msg":"tt kk","time":"2022-03-07 10:03:34"}
+{"level":"debug","msg":"ddd","time":"2022-03-07 10:03:47"}
+{"level":"debug","msg":"hello log","time":"2022-03-07 10:03:47"}
+{"level":"error","msg":"ddd11","time":"2022-03-07 10:03:47"}
+{"level":"fatal","msg":"tt kk","time":"2022-03-07 10:03:47"}
+{"level":"debug","msg":"ddd","time":"2022-03-07 10:10:04"}
+{"level":"info","msg":"ddd","time":"2022-03-07 10:10:04"}
+{"level":"debug","msg":"hello log","time":"2022-03-07 10:10:04"}
+{"level":"error","msg":"ddd11","time":"2022-03-07 10:10:04"}

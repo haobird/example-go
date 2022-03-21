@@ -8,3 +8,20 @@ zk:
   service: 
     level: 10
   timeout: 30
+
+env: "local"
+server:
+  port: 8090
+  refreshDuration: 3
+
+log:
+  writers: file,stdout  # 文件和终端输出
+  level: debug    # 报警等级
+  file: log/chassis.log
+  format_text: true
+  color: true
+  rollingPolicy: size
+  rotate_date: 30
+  rotate_size: 500
+  backup_count: 10
+  compress: true

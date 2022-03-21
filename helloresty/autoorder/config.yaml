@@ -1,0 +1,26 @@
+env: local
+
+# 日志配置
+log:
+  writers: file,stdout  # 文件和终端输出
+  level: info    # 报警等级
+  file: log/chassis.log
+  format_text: true
+  color: true
+
+service:
+  interval: 5 # 刷新频率，单位：分钟
+  proxy:   # 代理地址： 为空则不启用代理  http://proxyserver:8888
+
+notify:
+  type: 1  # 是否启用通知, 0 为不启用， 1 为 bark, 2为 wechat
+  uid: xYaWw8upzRgbYDCV5XCSzX # 通知地址（安装 bark）
+
+# 预订配置
+book:
+  po: "" # 填写 po号
+  assign_dates: ["2022-02-09", "2022-02-10"]  # 自动选择的日期，如果 是自动提交，一定要指定日期，不然会自动选择最近的
+  auto_submit: 1   # 有 可预约日期 是否自动提交： 1为自动提交 ， 0 为不提交
+  show_num: 1 # 是否显示 可预约的数量
+  
+

@@ -45,4 +45,13 @@ var (
 
 	// ErrPasswordFormat indicates weak password.
 	ErrPasswordFormat = errors.New("password does not meet the requirements")
+
+	ErrSelectEntity = errors.New("select entity from db error")
+
+	ErrViewEntity = errors.New("view entity failed")
+
+	// ErrCreateEntity indicates error in creating entity or entities
+	ErrCreateEntity = errors.New("create entity failed")
+
+	ErrRemoveEntity = errors.New("remove entity failed")
 )

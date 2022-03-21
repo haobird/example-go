@@ -1,0 +1,198 @@
+package main
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/tidwall/gjson"
+)
+
+var (
+	str1 = `{
+		"us_id": 2846725968,
+		"type": 0,
+		"status": 0,
+		"uid": 0,
+		"name": "有人来了",
+		"st_id": 30,
+		"sr_id": 0,
+		"identify": "有人来了",
+		"local_dev": "",
+		"create_time": 0,
+		"setting": {
+			"action_list": [
+				{
+					"groupInfo": [],
+					"housetypedevice_name": "小米智能猫眼",
+					"id": 1,
+					"keyName": "远程呼叫（模拟“有人按门铃”）",
+					"model": "loock.cateye.v02",
+					"name": "远程呼叫（模拟“有人按门铃”）",
+					"payload": {
+						"command": "loock.cateye.v01.wakeup",
+						"delay_time": 0,
+						"did": "441890475",
+						"value": {
+							"rpc_doorbell": 1
+						}
+					},
+					"sa_id": 3565,
+					"tr_id": 201,
+					"type": 0
+				}
+			],
+			"enable": 1,
+			"enable_push": 0,
+			"launch": {
+				"attr": [
+					{
+						"enable": true,
+						"key": "",
+						"src": "user",
+						"tr_id": 101
+					}
+				],
+				"express": 0
+			}
+		},
+		"authed": [
+			"441890475"
+		],
+		"real_st_id": 0
+	}`
+
+	str2 = `{
+		"us_id": 2606713273,
+		"type": 0,
+		"status": 0,
+		"uid": 0,
+		"name": "Test2 处于10000 lux以上-空气净化器 调至睡眠模式",
+		"st_id": 51,
+		"sr_id": 0,
+		"identify": "",
+		"local_dev": "",
+		"create_time": 0,
+		"setting": {
+			"action_list": {
+				"0": {
+					"id": 1,
+					"keyName": "调至睡眠模式",
+					"model": "zhimi.airpurifier.m1",
+					"name": "空气净化器",
+					"payload": {
+						"command": "zhimi.airpurifier.m1.set_mode",
+						"delay_time": 0,
+						"did": "12638489",
+						"tempId": 161,
+						"total_length": 0,
+						"value": "silent"
+					},
+					"sa_id": 161,
+					"tr_id": 201,
+					"type": 0
+				},
+				"type": 1
+			},
+			"enable": 1,
+			"launch": {
+				"attr": [
+					{
+						"device_name": "Mi Helligkeitssensor",
+						"did": "255093104",
+						"enable": true,
+						"extra": "",
+						"key": "prop.lumi.sen_ill.mgl01.2.1",
+						"name": "处于10000 lux以上",
+						"src": "device",
+						"tempId": 2535,
+						"tr_id": 122,
+						"value": {
+							"max": 100000,
+							"min": 10000
+						}
+					},
+					{
+						"device_name": "Mi Helligkeitssensor",
+						"did": "255093104",
+						"enable": true,
+						"extra": "",
+						"key": "prop.lumi.sen_ill.mgl01.2.1",
+						"name": "处于10000 lux以上",
+						"src": "device",
+						"tempId": 2535,
+						"tr_id": 122,
+						"value": {
+							"max": 100000,
+							"min": 10000
+						}
+					}
+				],
+				"express": 0
+			},
+			"timespan": {
+				"from": {
+					"hour": 0,
+					"min": 0
+				},
+				"to": {
+					"hour": 0,
+					"min": 0
+				},
+				"wday": [
+					0,
+					1,
+					2,
+					3,
+					4,
+					5,
+					6
+				]
+			}
+		},
+		"authed": [],
+		"real_st_id": 0
+	}`
+)
+
+type Device struct {
+	ID        int64
+	ProjectID int64
+	DID       string
+	DeviceID  string
+}
+
+func main() {
+	var didArr []string
+	// 获取 action_list 中的 did
+	action_list := gjson.Get(str2, "setting.action_list")
+	action_list.ForEach(func(key, value gjson.Result) bool {
+		did := value.Get("payload.did").String()
+		// 读取 具体 did
+		fmt.Printf("key:%s, did: %s\n", key.String(), did)
+		didArr = append(didArr, did)
+		return true // keep iterating
+	})
+	// 获取 launch 中的 did
+	launch_attrs := gjson.Get(str2, "setting.launch.attr")
+	launch_attrs.ForEach(func(key, value gjson.Result) bool {
+		did := value.Get("did").String()
+		// 读取 具体 did
+		fmt.Printf("did: %s\n", did)
+		didArr = append(didArr, did)
+		return true // keep iterating
+	})
+
+	fmt.Printf("长度 %d, %v", len(didArr), didArr)
+
+	deviceArr := []Device{
+		{ID: 30, ProjectID: 56534238264557696, DID: "255093104", DeviceID: "NTcyMzQ4OTYzNDc3MDI0MDA"},
+		{ID: 68, ProjectID: 62326174623727616, DID: "12638489", DeviceID: "NjU0MTU0OTE0ODA0NTMyNDg"},
+	}
+
+	for _, val := range deviceArr {
+		str2 = strings.Replace(str2, val.DID, val.DeviceID, -1)
+	}
+
+	fmt.Println(str2)
+
+}

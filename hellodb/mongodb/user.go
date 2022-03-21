@@ -150,6 +150,35 @@ func (ur userRepository) RetrievePage(ctx context.Context, pm user.PageMetadata,
 
 }
 
+func (ur userRepository) Remove(ctx context.Context, clause map[string]interface{}) (int64, error) {
+	coll := ur.db.Collection(userCollection)
+
+	opts := options.Delete().SetCollation(&options.Collation{
+		Strength:  1,
+		CaseLevel: false,
+	})
+	res, err := coll.DeleteMany(context.TODO(), bson.D{{"uid", "ddd"}}, opts)
+	if err != nil {
+		return 0, err
+	}
+	return res.DeletedCount, nil
+}
+
+func (ur userRepository) RemoveByID(ctx context.Context, id string) error {
+	coll := ur.db.Collection(userCollection)
+
+	opts := options.Delete().SetCollation(&options.Collation{
+		Strength:  1,
+		CaseLevel: false,
+	})
+	res, err := coll.DeleteMany(context.TODO(), bson.D{{"id", id}}, opts)
+	fmt.Println(res)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type dbUser struct {
 	ID         string      `bson:"id"`
 	Email      string      `bson:"email"`

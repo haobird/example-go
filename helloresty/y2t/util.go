@@ -16,8 +16,8 @@ type MsgResult struct {
 }
 
 // 通知
-func PushMsg(title, content string) error {
-	uid := "q2QTksYhGyYm7A7UDVnTaY"
+func PushMsg(uid, title, content string) error {
+	// uid := "q2QTksYhGyYm7A7UDVnTaY"
 	prev := "https://api.day.app"
 	path := fmt.Sprintf("%s/%s/%s/%s", prev, uid, title, content)
 	logger.Infof("通知消息 %s", path)
@@ -35,4 +35,13 @@ func PushMsg(title, content string) error {
 	}
 
 	return nil
+}
+
+func IsValueInList(value string, list []string) bool {
+	for _, v := range list {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }

@@ -1,0 +1,25 @@
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+type Config struct{}
+
+func main() {
+	_, err := loadConfig("config.yaml")
+	if err != nil {
+		fmt.Println(err) // output: 没有这样的文件或目录
+	}
+}
+
+func loadConfig(path string) (*Config, error) {
+	_, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// do stuff
+	return &Config{}, nil
+}

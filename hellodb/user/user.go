@@ -29,24 +29,26 @@ type UserPage struct {
 }
 
 type UserRepository interface {
-	Save(ctx context.Context, u User) (string, error)
+	// 保存一个 返回 索引
+	Save(ctx context.Context, u User) (User, error)
+	// 保存多个 返回 对象列表
+	SaveMany(ctx context.Context, us ...User) ([]User, error)
+	// 更新 指定索引的一个 对象
+	Update(ctx context.Context, u User) error
 
-	// SaveMany(ctx context.Context, us ...User) ([]User, error)
-
-	Update(ctx context.Context, id string, u User) error
-
+	// UpdateMany(ctx context.Context, )
+	// 通过 email 获取 一个 用户
 	// RetrieveByEmail(ctx context.Context, email string) (User, error)
-
-	// RetrieveByID(ctx context.Context, id string) (User, error)
-
-	// RetrieveAllByIDs(ctx context.Context, ids []string) ([]User, error)
-
-	// RetrieveAllByCondition(ctx context.Context, params map[string]interface{}) ([]User, error)
-
+	// 通过ID 获取 一个 用户
+	RetrieveByID(ctx context.Context, id string) (User, error)
+	// 过滤条件下 获取 所有
+	RetrieveAll(ctx context.Context, clause map[string]interface{}) ([]User, error)
+	// 通过 ID 获取 所有
+	RetrieveAllByIDs(ctx context.Context, ids []string) ([]User, error)
+	// 过滤条件下 获取分页数据
 	RetrievePage(ctx context.Context, pm PageMetadata, clause map[string]interface{}) (UserPage, error)
-
-	// RetrieveAll retrieves all users for given array of userIDs.
-	// RetrievePage(ctx context.Context, offset, limit int64, order, dir string, filter map[string]interface{}) (UserPage, error)
-
-	// Remove(ctx context.Context, id string) error
+	// 过滤条件下 删除所有数据 并返回 删除 数量
+	Remove(ctx context.Context, clause map[string]interface{}) (int64, error)
+	// 通过ID 删除 用户
+	RemoveByID(ctx context.Context, id string) error
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -11,20 +12,20 @@ import (
 
 type FormatDataImpl struct{}
 
-func (fdi *FormatDataImpl) DoFormat(data *message.Data) (r *message.Data, err error) {
+func (fdi *FormatDataImpl) DoFormat(ctx context.Context, data *message.Data) (r *message.Data, err error) {
 	var rData message.Data
 	rData.Text = strings.ToUpper(data.Text)
 	return &rData, nil
 }
 
-type MsgImpl struct{}
+// type MsgImpl struct{}
 
-func (mi *MsgImpl) Query(req *message.Req) (*message.Resp, error) {
-	var resp message.Resp
-	resp.Code = 0
-	resp.Message = strings.ToUpper(req.Query)
-	return &resp, nil
-}
+// func (mi *MsgImpl) Query(req *message.Req) (*message.Resp, error) {
+// 	var resp message.Resp
+// 	resp.Code = 0
+// 	resp.Message = strings.ToUpper(req.Query)
+// 	return &resp, nil
+// }
 
 const (
 	HOST = "0.0.0.0"

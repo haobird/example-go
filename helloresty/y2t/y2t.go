@@ -19,7 +19,8 @@ const (
 
 var (
 	headers = map[string]string{
-		"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.57 Safari/537.36 OPR/40.0.2308.15 (Edition beta)",
+		"User-Agent":   "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.57 Safari/537.36 OPR/40.0.2308.15 (Edition beta)",
+		"Content-Type": "application/json;charset=UTF-8",
 	}
 )
 
@@ -29,7 +30,7 @@ func PoSearch(po string) (Order, error) {
 	headers["Origin"] = origin_url
 	headers["Referer"] = posearch_referer_url
 
-	url := BaseURI + posearch_url
+	url := BaseURI + find_order_num_url
 	jsonStr := `{
 		"parameter": {
             "controlWord": "I",
@@ -48,7 +49,7 @@ func PoSearch(po string) (Order, error) {
 	// fmt.Println("err:", err)
 	// spew.Dump(resp)
 
-	logger.Infof("[%s] 获取PO信息 err: %v, 结果: %s", Mod_PoSearch, err, resp)
+	logger.Debugf("[%s] 获取PO信息 err: %v, 结果: %s", Mod_PoSearch, err, resp)
 
 	var info Order
 	if err != nil {
@@ -73,6 +74,33 @@ func PoSearch(po string) (Order, error) {
 	}
 	info = infos[0]
 	return info, nil
+}
+
+// Po 的详情
+func PoDetail(info Order) (Detail, error) {
+	jsonStr := `{
+		"parameter": {
+            "controlWord": "I",
+            "orderNo": "%s",
+			"officeCode": "%s"
+        }
+	}`
+	body := fmt.Sprintf(jsonStr, info.OrderNo, info.OfficeCode)
+
+	// 组合 referer url
+	referer := CreateReservationReferer(info)
+	// 组合 请求 参数
+	headers["Content-Type"] = ContentType
+	headers["Origin"] = origin_url
+	headers["Referer"] = referer
+
+	url := BaseURI + posearch1_url
+	data, err := Request(url, body, headers)
+
+	var detail Detail
+	buf, _ := json.Marshal(data)
+	err = json.Unmarshal(buf, &detail)
+	return detail, err
 }
 
 // 获取 最新 预约时间 （一般是传入当前时间查询近15天的的预约时间）
@@ -160,9 +188,52 @@ func GetLatestRevByPo(data Order, date string, flag bool) ([]Reservation, error)
 	return infos, err
 }
 
-// 提交 预约 订单
-func SaveReservation() {
+// 判断 是否已经被 预约过了
+func HasSaved(fo ForecastOrder) bool {
+	if val, ok := fo["forecastNo"]; ok {
+		if val != "" {
+			return true
+		}
+	}
 
+	return false
+}
+
+// 提交 预约 订单
+func SaveReservation(order Order, info Detail, res Reservation) error {
+	// 组合 referer url
+	referer := CreateReservationReferer(order)
+
+	// header
+	headers["Content-Type"] = ContentType
+	headers["Origin"] = origin_url
+	headers["Referer"] = referer
+
+	// body
+	// 组装 各个信息
+	payload := map[string]interface{}{
+		"forecastSetupModel":        res,                            // 日期信息
+		"forecastOrderModel":        info.ForecastOrderModel,        // 订单信息
+		"forecastOrderDetailModels": info.ForecastOrderDetailModels, // 订单详情列表
+	}
+
+	buf, err := json.Marshal(payload)
+
+	// fmt.Println(string(buf))
+	// if err != nil {
+	// 	logger.Errorf("[%s] 生成 获取剩余可预约数量的 方法错误: %v", Mod_GetLatestRevByPo, err)
+	// 	return err
+	// }
+
+	url := BaseURI + reservation_save_url
+	resp, err := Request(url, string(buf), headers)
+
+	if err != nil {
+		return err
+	}
+
+	logger.Debugf("预约结果 %v", resp)
+	return err
 }
 
 // 生成
@@ -190,7 +261,7 @@ func combineURL(url string, values map[string]string) string {
 
 	str := req.URL.String()
 
-	fmt.Println(str)
+	logger.Debugf("组合网址结果：", str)
 
 	return str
 }
@@ -204,7 +275,7 @@ func Request(url string, body interface{}, headers map[string]string) (interface
 	request = request.SetBody(body)
 	resp, err := request.Post(url)
 
-	logger.Infof("[Request] 获取请求 err: %v, 结果: %s", err, resp)
+	logger.Debugf("[Request] 获取请求 err: %v, 结果: %s", err, resp)
 
 	var result Result
 	err = json.Unmarshal(resp.Body(), &result)
@@ -216,6 +287,11 @@ func Request(url string, body interface{}, headers map[string]string) (interface
 	if result.Status != "0" && result.Status != "1" {
 		logger.Errorf("[%s] 获得响应结果错误提示 :%v", Mod_GetLatestRevByPo, result.ErrorMsg)
 		return "", err
+	}
+
+	if result.ErrorMsg != "" {
+		logger.Errorf("[%s] 获得响应结果错误提示 :%v", Mod_GetLatestRevByPo, result.ErrorMsg)
+		return "", errors.New(result.ErrorMsg)
 	}
 
 	return result.Data, nil
