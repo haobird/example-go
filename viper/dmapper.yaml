@@ -1,0 +1,26 @@
+# 设备映射的配置
+dmapper:
+  devices:
+    'lumi.flood.bmcn01': 'blt.3.17jra26n8e000'
+    'zimi.plug.zncz01' : "333"
+    'xiaomi.wifispeaker.x08c': "1045796156"
+    'guojia.lock.a230': 'guojia-11.139.171.162-155170385627710080'
+    switch: "333"
+
+  mapper:
+    'lumi.flood.bmcn01':
+      model: 'lumi.flood.bmcn01'
+      control_unit_id: 1353742355
+      did: 'blt.3.17jra26n8e000'
+
+    # 米家智能墙壁插座
+    'zimi.plug.zncz01':
+      model: 'zimi.plug.zncz01'
+      control_unit_id: 11233
+      did: 333
+
+    # 小爱音箱
+    'xiaomi.wifispeaker.x08c':
+      model: 'xiaomi.wifispeaker.x08c'
+      control_unit_id: 1353742355
+      did: 1045796156
