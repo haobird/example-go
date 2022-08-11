@@ -1,31 +1,6 @@
 version: '3.1'
 
 services:
-  elasticsearch:
-    image: elasticsearch:7.17.5
-    restart: always
-    ports:
-      - 9200:9200
-      - 9300:9300
-    environment:
-      - discovery.type=single-node
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      # - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-    volumes:
-      - elastic:/usr/share/elasticsearch/data
-  
-  # kibana:
-  #   image: kibana:8.1.0
-  #   restart: always
-  #   ports:
-  #     - 5601:5601
-  #   environment:
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #     - ELASTICSEARCH_USERNAME=elastic
-  #     - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
-  #   volumes:
-  #     - kibana:/usr/share/kibana/config
-
   jaeger:
     image: jaegertracing/all-in-one
     restart: always
@@ -49,23 +24,23 @@ services:
       # es.version: 7
       # es.index-prefix: jaeger-
       # es.create-index-templates: false
-    depends_on:
-      - elasticsearch
+    # depends_on:
+    #   - elasticsearch
 
-  # prometheus:
-  #   image: prom/prometheus
-  #   # platform: linux/amd64
-  #   ports:
-  #     - 9090:9090
-  #   volumes:
-  #     - ./prometheus.yml:/etc/prometheus/prometheus.yml
+  prometheus:
+    image: prom/prometheus
+    # platform: linux/amd64
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
 
-  # grafana:
-  #   image: grafana/grafana
-  #   ports:
-  #     - 3000:3000
-  #   volumes:
-  #     - grafana:/var/lib/grafana
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana:/var/lib/grafana
 
 
 volumes:

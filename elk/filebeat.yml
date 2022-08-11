@@ -1,0 +1,52 @@
+filebeat.inputs:
+ - type: log
+  enabled: true
+  paths:
+   # 当前目录下的所有.log文件
+   - /root/tmp/logs/*.log
+  fields:
+   service: "our31-java"
+  multiline.pattern: ^\[
+  multiline.negate: true
+  multiline.match: after
+ - type: log
+  enabled: true
+  paths:
+   # 当前目录下的所有.log文件
+   - /root/tmp/log/*.log
+  fields:
+   service: "our31-nginx"
+ 
+filebeat.config.modules:
+ path: ${path.config}/modules.d/*.yml
+ reload.enabled: false
+ 
+# setup.template.settings:
+#  index.number_of_shards: 1
+ 
+# setup.dashboards.enabled: false
+ 
+# setup.kibana:
+#  host: "http://localhost:5601"
+ 
+# 不直接传输至ES
+#output.elasticsearch:
+# hosts: ["http://es-master:9200"]
+# index: "filebeat-%{[beat.version]}-%{+yyyy.MM.dd}"
+ 
+setup.ilm.enabled: false
+ 
+output.logstash:
+ hosts: ["logstash.server.com:5044"]
+ 
+ # Optional SSL. By default is off.
+ # List of root certificates for HTTPS server verifications
+ ssl.certificate_authorities: "./ssl/ca.crt"
+ # Certificate for SSL client authentication
+ ssl.certificate: "./ssl/client.crt"
+ # Client Certificate Key
+ ssl.key: "./ssl/client.key"
+ 
+# processors:
+#  - add_host_metadata: ~
+#  - add_cloud_metadata: ~
